@@ -1,0 +1,45 @@
+version: '2'
+volumes:
+  nextcloud:
+  db:
+services:
+    db:
+      image: mysql
+      networks:
+        redecloud:
+          ipv4_address: 10.10.0.4
+
+      command: --default-authentication-plugin=mysql_native_password
+      restart: always
+      environment:
+        - MYSQL_ROOT_PASSWORD=nextcloud
+        - MYSQL_USER=nextcloud
+        - MYSQL_DATABASE=nextcloud
+        - MYSQL_PASSWORD=nextcloud
+    app:
+      image: nextcloud/bombolom
+      container_name: bombolomfm
+      restart: always
+      networks:
+        redecloud:
+          ipv4_address: 10.10.0.3
+      ports:
+        - 80:80
+        - 443:443
+      extra_hosts:
+        - "bombolomfm.local:10.10.0.3"
+      depends_on:
+        - db
+      volumes:
+        - nextcloud:/var/www/html
+      environment:
+        - MYSQL_PASSWORD=nextcloud
+        - MYSQL_DATABASE=nextcloud
+        - MYSQL_USER=nextcloud
+        - MYSQL_HOST=db
+networks:
+    redecloud:
+      driver: bridge
+      ipam:
+        config:
+          - subnet: 10.10.0.0/16
